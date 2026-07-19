@@ -10,7 +10,9 @@ class Settings(BaseSettings):
     app_name: str = "AI Document Assistant"
     environment: str = "development"
 
-    database_url: str = Field(default="postgresql+psycopg://postgres:postgres@localhost:5432/docassist")
+    database_url: str = Field(
+        default="postgresql+psycopg://postgres:postgres@localhost:5432/Ai Document Assistant"
+    )
 
     openai_api_key: str = Field(default="")
     openai_chat_model: str = "gpt-4o-mini"
