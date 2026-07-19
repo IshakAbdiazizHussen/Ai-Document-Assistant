@@ -1,0 +1,29 @@
+  AI Document Assistant Notes  
+
+
+
+This   file   has		irregular   whitespace and DISTINCTIVE_TXT_MARKER.
+
+
+
+
+Line 0: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 1: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 2: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 3: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 4: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 5: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 6: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 7: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 8: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 9: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 10: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 11: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 12: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 13: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 14: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 15: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 16: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 17: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 18: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   
+Line 19: The AI Document Assistant lets a user upload documents and converse with an assistant that answers questions using only the content of those documents, grounding every answer in retrieved passages.   

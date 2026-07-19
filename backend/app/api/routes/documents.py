@@ -24,7 +24,13 @@ async def upload_document(
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(exc)
         ) from exc
-    return document
+
+    # Snapshot the response while status is still "processing" (Feature 2's
+    # contract), then run the pipeline. process_document() never raises —
+    # it resolves the document to "ready"/"failed" itself.
+    response = DocumentCreateResponse.model_validate(document)
+    document_service.process_document(db, document.id)
+    return response
 
 
 @router.get("", response_model=list[DocumentListItem])

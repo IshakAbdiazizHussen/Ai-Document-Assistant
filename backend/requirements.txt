@@ -8,6 +8,7 @@ openai
 chromadb
 pypdf
 python-docx
+tiktoken
 python-multipart
 pytest
 httpx

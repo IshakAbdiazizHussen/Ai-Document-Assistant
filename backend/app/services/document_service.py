@@ -5,7 +5,10 @@ from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.models import Document, DocumentStatus, User
+from app.models import Chunk, Document, DocumentStatus, User
+from app.processing.chunker import chunk_text, count_tokens
+from app.processing.cleaner import clean_text
+from app.processing.extractor import ExtractionError, extract_text
 from app.utils.file_validation import validate_upload
 
 # MVP has no authentication system (docs/03-constraints.md rules it out of
@@ -71,3 +74,40 @@ def delete_document(db: Session, document_id: uuid.UUID) -> None:
     Path(document.storage_path).unlink(missing_ok=True)
     db.delete(document)
     db.commit()
+
+
+def process_document(db: Session, document_id: uuid.UUID) -> Document:
+    """Extract, clean, and chunk a stored document, then mark it ready or
+    failed. This is the recovery boundary for the processing pipeline: any
+    exception here is caught and turned into a "failed" status rather than
+    left to crash the request or leave the document stuck at "processing".
+    """
+    document = get_document(db, document_id)
+    try:
+        raw_text = extract_text(document.storage_path, document.file_type)
+        cleaned = clean_text(raw_text)
+        chunks = chunk_text(cleaned)
+        if not chunks:
+            raise ExtractionError("No extractable text found after cleaning.")
+
+        # Replace any chunks from a prior run of this document.
+        db.query(Chunk).filter(Chunk.document_id == document.id).delete()
+        for index, chunk_content in enumerate(chunks):
+            db.add(
+                Chunk(
+                    document_id=document.id,
+                    chunk_index=index,
+                    text=chunk_content,
+                    vector_id=None,
+                    token_count=count_tokens(chunk_content),
+                )
+            )
+        document.status = DocumentStatus.READY
+        document.error_message = None
+    except Exception as exc:  # noqa: BLE001 - intentional recovery boundary
+        document.status = DocumentStatus.FAILED
+        document.error_message = str(exc)[:2000]
+
+    db.commit()
+    db.refresh(document)
+    return document

@@ -120,7 +120,11 @@ def test_get_document_returns_full_row(client, uploaded_ids):
     assert body["filename"] == "detail-me.txt"
     assert body["file_type"] == "txt"
     assert body["file_size_bytes"] == len(b"content")
-    assert body["status"] == "processing"
+    # Feature 3 processes synchronously during upload, so by the time this
+    # GET runs the document has already resolved to "ready" (or "failed").
+    # The upload response itself still reports "processing" (see
+    # test_upload_valid_txt) — that's the pre-processing snapshot.
+    assert body["status"] == "ready"
 
 
 def test_get_document_unknown_id_returns_404(client):
