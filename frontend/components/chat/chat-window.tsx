@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare } from "lucide-react";
+import { AlertCircle, MessageSquare } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { ChatInput } from "@/components/chat/chat-input";
@@ -27,11 +27,12 @@ export function ChatWindow({ documentId }: { documentId?: string }) {
   }, [documentId]);
 
   const hasSession = Boolean(sessionId);
-  const { data: messages, isPending } = useChatMessages(sessionId);
+  const { data: messages, isPending, isError, refetch } = useChatMessages(sessionId);
   const { mutate: send, isPending: isSending } = useSendMessage();
 
   const messageList = messages ?? [];
   const showSkeleton = hasSession && isPending;
+  const showError = hasSession && isError;
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,6 +71,20 @@ export function ChatWindow({ documentId }: { documentId?: string }) {
               <Skeleton className="h-12 w-2/3 self-end rounded-lg" />
               <Skeleton className="h-16 w-2/3 self-start rounded-lg" />
             </>
+          ) : showError ? (
+            <EmptyState
+              icon={AlertCircle}
+              title="Couldn't load messages"
+              description="Something went wrong loading this conversation."
+              action={
+                <button
+                  onClick={() => refetch()}
+                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  Try again
+                </button>
+              }
+            />
           ) : messageList.length > 0 ? (
             messageList.map((message) => <MessageBubble key={message.id} message={message} />)
           ) : (

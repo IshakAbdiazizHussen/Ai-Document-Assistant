@@ -3,12 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
+import { getErrorMessage } from "@/lib/api/client";
 import {
   deleteDocument,
   getDocument,
   listDocuments,
   uploadDocument,
-} from "@/lib/api/documents.mock";
+} from "@/lib/api/documents";
 import type { DocumentSummary } from "@/lib/types/document";
 
 const documentsKey = ["documents"] as const;
@@ -40,8 +41,8 @@ export function useUploadDocument() {
       queryClient.invalidateQueries({ queryKey: documentsKey });
       toast.success("Document uploaded — processing started.");
     },
-    onError: () => {
-      toast.error("Upload failed. Please try again.");
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
     },
   });
 }
@@ -54,8 +55,8 @@ export function useDeleteDocument() {
       queryClient.invalidateQueries({ queryKey: documentsKey });
       toast.success("Document deleted.");
     },
-    onError: () => {
-      toast.error("Failed to delete document.");
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
     },
   });
 }

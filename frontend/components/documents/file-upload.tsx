@@ -5,6 +5,7 @@ import { Loader2, UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { getErrorMessage } from "@/lib/api/client";
 import { useUploadDocument } from "@/hooks/use-documents";
 import { uploadFileSchema, type UploadFileValues } from "@/lib/schemas/document";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
 export function FileUpload() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const { mutate, isPending } = useUploadDocument();
+  const { mutate, isPending, error, reset: resetMutation } = useUploadDocument();
 
   const {
     setValue,
@@ -25,6 +26,7 @@ export function FileUpload() {
 
   function submitFile(file: File | undefined) {
     if (!file) return;
+    resetMutation();
     setValue("file", file, { shouldValidate: true });
     handleSubmit(({ file }) => {
       mutate(file, { onSuccess: () => reset() });
@@ -73,7 +75,9 @@ export function FileUpload() {
           onChange={(e) => submitFile(e.target.files?.[0])}
         />
       </div>
-      {errors.file ? (
+      {error ? (
+        <p className="text-xs text-destructive">{getErrorMessage(error)}</p>
+      ) : errors.file ? (
         <p className="text-xs text-destructive">{errors.file.message}</p>
       ) : null}
     </div>
