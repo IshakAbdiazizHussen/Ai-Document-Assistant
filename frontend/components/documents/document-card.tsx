@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getErrorMessage } from "@/lib/api/client";
 import { useDeleteDocument } from "@/hooks/use-documents";
 import { cn } from "@/lib/utils";
 import type { DocumentSummary } from "@/lib/types/document";
@@ -27,7 +28,7 @@ export function DocumentCard({
   active?: boolean;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { mutate: deleteDoc, isPending: isDeleting } = useDeleteDocument();
+  const { mutate: deleteDoc, isPending: isDeleting, error: deleteError, reset: resetDelete } = useDeleteDocument();
 
   return (
     <div
@@ -50,7 +51,13 @@ export function DocumentCard({
       </Link>
       <DocumentStatusBadge status={document.status} />
 
-      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+      <Dialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          setConfirmOpen(open);
+          if (!open) resetDelete();
+        }}
+      >
         <DialogTrigger
           render={
             <Button
@@ -70,6 +77,9 @@ export function DocumentCard({
               indexed content. This can&rsquo;t be undone.
             </DialogDescription>
           </DialogHeader>
+          {deleteError ? (
+            <p className="text-sm text-destructive">{getErrorMessage(deleteError)}</p>
+          ) : null}
           <DialogFooter>
             <Button variant="outline" onClick={() => setConfirmOpen(false)}>
               Cancel

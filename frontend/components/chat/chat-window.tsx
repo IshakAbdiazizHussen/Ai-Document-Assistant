@@ -8,6 +8,7 @@ import { MessageBubble } from "@/components/chat/message-bubble";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getErrorMessage } from "@/lib/api/client";
 import { useChatMessages, useSendMessage } from "@/hooks/use-chat";
 
 function sessionStorageKey(documentId: string) {
@@ -28,7 +29,7 @@ export function ChatWindow({ documentId }: { documentId?: string }) {
 
   const hasSession = Boolean(sessionId);
   const { data: messages, isPending, isError, refetch } = useChatMessages(sessionId);
-  const { mutate: send, isPending: isSending } = useSendMessage();
+  const { mutate: send, isPending: isSending, error: sendError } = useSendMessage();
 
   const messageList = messages ?? [];
   const showSkeleton = hasSession && isPending;
@@ -98,6 +99,9 @@ export function ChatWindow({ documentId }: { documentId?: string }) {
           <div ref={bottomRef} />
         </div>
       </ScrollArea>
+      {sendError ? (
+        <p className="text-xs text-destructive">{getErrorMessage(sendError)}</p>
+      ) : null}
       <ChatInput onSend={handleSend} disabled={isSending} />
     </div>
   );
