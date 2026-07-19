@@ -2,6 +2,7 @@ from functools import lru_cache
 
 from openai import OpenAI, OpenAIError
 
+from app.ai.error_utils import describe_openai_error
 from app.core.config import get_settings
 
 # Kept well under OpenAI's per-request input-item limit for the embeddings
@@ -47,19 +48,11 @@ def _embed_batch(batch: list[str], model: str) -> list[list[float]]:
         # `from None` deliberately drops the exception chain: the SDK's own
         # error message can echo back a masked fragment of the API key that
         # was used, so it must never propagate into logs or responses.
-        raise EmbeddingError(f"Embedding request failed: {_describe_error(exc)}") from None
+        raise EmbeddingError(f"Embedding request failed: {describe_openai_error(exc)}") from None
     except Exception as exc:
-        raise EmbeddingError(f"Embedding request failed unexpectedly: {_describe_error(exc)}") from None
+        raise EmbeddingError(
+            f"Embedding request failed unexpectedly: {describe_openai_error(exc)}"
+        ) from None
 
     ordered = sorted(response.data, key=lambda item: item.index)
     return [item.embedding for item in ordered]
-
-
-def _describe_error(exc: Exception) -> str:
-    """A sanitized description: exception type and HTTP status only. Never
-    str(exc)/exc.message/exc.body, which can contain response content.
-    """
-    status_code = getattr(exc, "status_code", None)
-    if status_code is not None:
-        return f"{type(exc).__name__} (status {status_code})"
-    return type(exc).__name__
