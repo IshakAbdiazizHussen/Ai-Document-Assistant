@@ -21,11 +21,18 @@ def tmp_settings(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _no_real_embedding_calls(monkeypatch):
-    # These tests exercise upload/list/get/delete, not embeddings
-    # (Feature 4). Stub out process_document()'s embed_texts() call so this
-    # file never makes a real network call to OpenAI.
+def _no_real_embedding_or_vector_store_calls(monkeypatch):
+    # These tests exercise upload/list/get/delete, not embeddings (Feature
+    # 4) or vector storage (Feature 5). Stub out both so this file never
+    # makes a real network call to OpenAI or writes into the real
+    # chroma_persist_dir.
     monkeypatch.setattr(document_service, "embed_texts", lambda texts: [[0.0] for _ in texts])
+    monkeypatch.setattr(
+        document_service.vector_store,
+        "add_chunks",
+        lambda document_id, chunk_records: [r.chunk_id for r in chunk_records],
+    )
+    monkeypatch.setattr(document_service.vector_store, "delete_document", lambda document_id: None)
 
 
 @pytest.fixture

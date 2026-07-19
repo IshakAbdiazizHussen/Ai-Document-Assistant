@@ -21,11 +21,18 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest.fixture(autouse=True)
-def _no_real_embedding_calls(monkeypatch):
-    # These tests exercise extraction/chunking, not embeddings (Feature 4).
-    # Stub out process_document()'s embed_texts() call so this file never
-    # makes a real network call to OpenAI.
+def _no_real_embedding_or_vector_store_calls(monkeypatch):
+    # These tests exercise extraction/chunking, not embeddings (Feature 4)
+    # or vector storage (Feature 5). Stub out process_document()'s calls to
+    # both so this file never makes a real network call to OpenAI or writes
+    # into the real chroma_persist_dir.
     monkeypatch.setattr(document_service, "embed_texts", lambda texts: [[0.0] for _ in texts])
+    monkeypatch.setattr(
+        document_service.vector_store,
+        "add_chunks",
+        lambda document_id, chunk_records: [r.chunk_id for r in chunk_records],
+    )
+    monkeypatch.setattr(document_service.vector_store, "delete_document", lambda document_id: None)
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +176,10 @@ def test_process_multipage_pdf_becomes_ready_with_multiple_chunks(db, tmp_path, 
     )
     assert len(chunks) > 1
     for chunk in chunks:
-        assert chunk.vector_id is None
+        # Feature 5 persists embeddings into the vector store and fills
+        # this in; the stub in _no_real_embedding_or_vector_store_calls
+        # returns the chunk's own id, mirroring real add_chunks() behavior.
+        assert chunk.vector_id == str(chunk.id)
         assert 0 < chunk.token_count <= 800
 
 
