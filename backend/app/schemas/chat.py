@@ -3,9 +3,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.core.config import get_settings
 from app.models.chat_message import ChatRole
 
-_MESSAGE_MAX_LENGTH = 4000
+_MESSAGE_MAX_LENGTH = get_settings().chat_message_max_length
 
 
 class SourceReference(BaseModel):

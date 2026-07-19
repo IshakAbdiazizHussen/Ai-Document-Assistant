@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     chunk_overlap_tokens: int = 100
     retrieval_top_k: int = 5
 
+    chat_message_max_length: int = 4000
+
 
 @lru_cache
 def get_settings() -> Settings:
