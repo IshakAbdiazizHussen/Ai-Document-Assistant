@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api.routes.chat import router as chat_router
@@ -13,6 +14,20 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title=settings.app_name)
+
+# The frontend runs on a different origin (e.g. localhost:3000 vs this
+# API's localhost:8000), so without CORS the browser blocks it from ever
+# reading a response, even though the request reaches the server fine —
+# this is the only way frontend/.env.local's NEXT_PUBLIC_API_URL setup
+# actually works from a browser.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_allowed_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(documents_router)
 app.include_router(chat_router)
 

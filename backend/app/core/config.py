@@ -28,6 +28,15 @@ class Settings(BaseSettings):
 
     chat_message_max_length: int = 4000
 
+    # Comma-separated list of origins allowed to call this API from a
+    # browser (frontend/.env.local's NEXT_PUBLIC_API_URL points here, but
+    # CORS is governed by the frontend's own origin, not that URL).
+    cors_allowed_origins: str = "http://localhost:3000"
+
+    @property
+    def cors_allowed_origins_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_allowed_origins.split(",") if origin.strip()]
+
 
 @lru_cache
 def get_settings() -> Settings:
