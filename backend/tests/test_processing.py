@@ -20,6 +20,14 @@ from app.utils import file_validation
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
+@pytest.fixture(autouse=True)
+def _no_real_embedding_calls(monkeypatch):
+    # These tests exercise extraction/chunking, not embeddings (Feature 4).
+    # Stub out process_document()'s embed_texts() call so this file never
+    # makes a real network call to OpenAI.
+    monkeypatch.setattr(document_service, "embed_texts", lambda texts: [[0.0] for _ in texts])
+
+
 # ---------------------------------------------------------------------------
 # Extractor
 # ---------------------------------------------------------------------------

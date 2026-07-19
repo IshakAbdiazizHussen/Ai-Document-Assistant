@@ -1,15 +1,19 @@
+import logging
 import uuid
 from pathlib import Path
 
 from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
+from app.ai.embeddings import EmbeddingError, embed_texts
 from app.core.config import get_settings
 from app.models import Chunk, Document, DocumentStatus, User
 from app.processing.chunker import chunk_text, count_tokens
 from app.processing.cleaner import clean_text
 from app.processing.extractor import ExtractionError, extract_text
 from app.utils.file_validation import validate_upload
+
+logger = logging.getLogger(__name__)
 
 # MVP has no authentication system (docs/03-constraints.md rules it out of
 # scope). Every document is attached to a single seeded default user until
@@ -102,6 +106,18 @@ def process_document(db: Session, document_id: uuid.UUID) -> Document:
                     token_count=count_tokens(chunk_content),
                 )
             )
+
+        # Thin integration point for Feature 4: embeddings are generated
+        # in-memory only for now. Feature 5 persists them into the vector
+        # store and fills in Chunk.vector_id. A document's ready/failed
+        # status is decided by extraction/chunking succeeding, not by
+        # embedding generation, so a failure here is logged and swallowed
+        # rather than flipped into a document-level failure.
+        try:
+            embed_texts(chunks)
+        except EmbeddingError:
+            logger.warning("Embedding generation failed for document %s", document.id, exc_info=True)
+
         document.status = DocumentStatus.READY
         document.error_message = None
     except Exception as exc:  # noqa: BLE001 - intentional recovery boundary
