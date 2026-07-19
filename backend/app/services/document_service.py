@@ -27,7 +27,10 @@ class DocumentNotFoundError(Exception):
     pass
 
 
-def _get_or_create_default_user(db: Session) -> User:
+def get_or_create_default_user(db: Session) -> User:
+    """Public (not module-private): chat_service reuses this so every
+    document and chat session shares the same single seeded user.
+    """
     user = db.query(User).filter(User.email == DEFAULT_USER_EMAIL).first()
     if user is None:
         user = User(email=DEFAULT_USER_EMAIL)
@@ -48,7 +51,7 @@ async def save_upload(file: UploadFile, db: Session) -> Document:
     storage_path = upload_dir / f"{uuid.uuid4()}{extension}"
     storage_path.write_bytes(contents)
 
-    user = _get_or_create_default_user(db)
+    user = get_or_create_default_user(db)
 
     document = Document(
         user_id=user.id,
