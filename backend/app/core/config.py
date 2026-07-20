@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     # Comma-separated list of origins allowed to call this API from a
     # browser (frontend/.env.local's NEXT_PUBLIC_API_URL points here, but
     # CORS is governed by the frontend's own origin, not that URL).
-    cors_allowed_origins: str = "http://localhost:3000"
+    # Includes 3001 as a fallback: Next.js auto-bumps to the next free port
+    # whenever something else is already holding 3000 in local dev.
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:3001"
 
     @property
     def cors_allowed_origins_list(self) -> list[str]:
