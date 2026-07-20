@@ -1,6 +1,5 @@
 from functools import lru_cache
 
-from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -10,11 +9,12 @@ class Settings(BaseSettings):
     app_name: str = "AI Document Assistant"
     environment: str = "development"
 
-    database_url: str = Field(
-        default="postgresql+psycopg://postgres:postgres@localhost:5432/Ai Document Assistant"
-    )
+    # No defaults: both are required so the app fails fast at startup
+    # (before uvicorn binds a port) if either is missing, rather than
+    # booting with an empty API key or a placeholder database.
+    database_url: str
+    openai_api_key: str
 
-    openai_api_key: str = Field(default="")
     openai_chat_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 
