@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUser, useLogout } from "@/hooks/use-auth";
 import { useDocuments } from "@/hooks/use-documents";
+import { formatFileSize } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 // No storage plan/quota exists on the backend yet; this cap is a UI
@@ -44,10 +45,6 @@ const navItems = [
     isActive: (pathname: string) => pathname.startsWith("/dashboard/settings"),
   },
 ];
-
-function formatGB(bytes: number) {
-  return (bytes / 1024 ** 3).toFixed(1);
-}
 
 function WorkspaceSwitcher({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   return (
@@ -158,7 +155,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           <div className="flex items-center justify-between text-sm text-zinc-500 dark:text-zinc-400">
             <span>Storage</span>
             <span>
-              {formatGB(usedBytes)}/{formatGB(STORAGE_QUOTA_BYTES)} GB
+              {formatFileSize(usedBytes)} / {formatFileSize(STORAGE_QUOTA_BYTES)}
             </span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
