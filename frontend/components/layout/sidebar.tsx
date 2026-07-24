@@ -22,7 +22,10 @@ import { cn } from "@/lib/utils";
 // No storage plan/quota exists on the backend yet; this cap is a UI
 // placeholder so the meter has something to fill against. The numerator
 // (bytes used) is always real, summed from actual uploaded file sizes.
-const STORAGE_QUOTA_BYTES = 10 * 1024 * 1024 * 1024;
+// Sized to real documents (KB-few MB each) so the bar visibly fills as
+// documents are added instead of staying an imperceptible sliver against
+// a multi-GB cap.
+const STORAGE_QUOTA_BYTES = 10 * 1024 * 1024;
 
 const navItems = [
   {
