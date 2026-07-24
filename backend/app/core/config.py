@@ -34,6 +34,11 @@ class Settings(BaseSettings):
 
     chat_message_max_length: int = 4000
 
+    # Daily per-user quotas (usage_service), enforced before the upload /
+    # chat endpoints touch OpenAI at all.
+    max_docs_per_day: int = 2
+    max_questions_per_day: int = 5
+
     # Comma-separated list of origins allowed to call this API from a
     # browser (frontend/.env.local's NEXT_PUBLIC_API_URL points here, but
     # CORS is governed by the frontend's own origin, not that URL).

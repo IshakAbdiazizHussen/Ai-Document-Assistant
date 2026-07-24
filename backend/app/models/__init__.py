@@ -3,6 +3,7 @@ from app.models.chat_session import ChatSession
 from app.models.chunk import Chunk
 from app.models.document import Document, DocumentStatus
 from app.models.document_page import DocumentPage
+from app.models.usage_counter import UsageCounter
 from app.models.user import User
 
 __all__ = [
@@ -14,4 +15,5 @@ __all__ = [
     "ChatSession",
     "ChatMessage",
     "ChatRole",
+    "UsageCounter",
 ]
