@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import enforce_upload_limit, get_current_user
 from app.db.session import get_db
 from app.models import User
 from app.schemas.document import (
@@ -13,7 +13,7 @@ from app.schemas.document import (
     DocumentListItem,
     DocumentPageOut,
 )
-from app.services import document_service
+from app.services import document_service, usage_service
 from app.services.document_service import DocumentNotFoundError, DocumentPageNotFoundError
 from app.utils.file_validation import FileTooLargeError, UnsupportedFileTypeError
 
@@ -24,7 +24,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 async def upload_document(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(enforce_upload_limit),
 ) -> DocumentCreateResponse:
     try:
         document = await document_service.save_upload(file, db, current_user)
@@ -34,6 +34,10 @@ async def upload_document(
         raise HTTPException(
             status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(exc)
         ) from exc
+
+    # Only counts against the daily quota once the upload itself actually
+    # succeeded — a rejected file type/size never reaches this line.
+    usage_service.increment_documents_uploaded(db, current_user)
 
     # Snapshot the response while status is still "processing" (Feature 2's
     # contract), then run the pipeline. process_document() never raises —

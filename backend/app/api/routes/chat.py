@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.ai.embeddings import EmbeddingError
 from app.ai.llm import LLMError
 from app.ai.vector_store import VectorStoreError
-from app.api.deps import get_current_user
+from app.api.deps import enforce_question_limit, get_current_user
 from app.db.session import get_db
 from app.models import User
 from app.schemas.chat import (
@@ -16,7 +16,7 @@ from app.schemas.chat import (
     ChatSessionSummary,
     ChatSessionUpdate,
 )
-from app.services import chat_service
+from app.services import chat_service, usage_service
 from app.services.chat_service import ChatSessionNotFoundError
 from app.services.document_service import DocumentNotFoundError
 
@@ -27,10 +27,10 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 def send_message(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(enforce_question_limit),
 ) -> ChatResponse:
     try:
-        return chat_service.send_message(
+        result = chat_service.send_message(
             db,
             request.message,
             current_user,
@@ -51,6 +51,11 @@ def send_message(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="The AI service is temporarily unavailable. Please try again.",
         ) from exc
+
+    # Only counts against the daily quota once the AI actually answered —
+    # none of the exception branches above reach this line.
+    usage_service.increment_questions_asked(db, current_user)
+    return result
 
 
 @router.get("/{session_id}/messages", response_model=list[ChatMessageOut])
