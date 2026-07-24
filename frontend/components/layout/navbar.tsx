@@ -43,7 +43,7 @@ export function Navbar() {
           <Button
             variant="ghost"
             onClick={() => openAuth("login")}
-            className="h-10 rounded-lg border border-zinc-300 bg-transparent px-5 text-sm font-bold text-zinc-900 hover:bg-zinc-100 dark:border-white/30 dark:text-white dark:hover:bg-white/10"
+            className="h-10 rounded-lg bg-violet-600 px-5 text-sm font-bold text-white hover:bg-violet-500"
           >
             Log in
           </Button>

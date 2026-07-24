@@ -85,7 +85,7 @@ export default function DashboardPage() {
 
       <div className="flex flex-1 flex-col p-4 sm:p-6">
         {isPending ? (
-          <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+          <div className="flex w-full flex-col gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
@@ -212,7 +212,7 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
+              <div className="flex w-full flex-col gap-2">
                 {filtered.map((document) => (
                   <DocumentCard key={document.id} document={document} />
                 ))}

@@ -15,8 +15,6 @@ const documents = [
   { name: "Research_Notes.txt", active: false },
 ];
 
-const trustedBy = ["NORTHPEAK", "VELOCOM", "HARLOW & CO.", "ARBORLINE"];
-
 const features = [
   {
     icon: Upload,
@@ -192,17 +190,9 @@ export default function Home() {
         </div>
 
         <div className="pt-6 pb-48">
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-center gap-6 px-4 sm:flex-row sm:justify-center sm:gap-10">
-            <span className="text-sm font-medium text-zinc-600 dark:text-zinc-300">Trusted by teams at</span>
-            {trustedBy.map((name) => (
-              <span
-                key={name}
-                className="font-mono text-sm font-semibold tracking-wider text-zinc-600 dark:text-zinc-300"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
+          <p className="mx-auto max-w-xl px-4 text-center text-lg font-medium text-zinc-600 dark:text-zinc-400">
+            Your documents have answers. We help you find them in seconds.
+          </p>
         </div>
       </div>
 
