@@ -23,18 +23,28 @@ from app.services.auth_service import (
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def _cookie_flags() -> dict:
+    settings = get_settings()
+    # Frontend (Vercel) and backend (Railway) are different registrable
+    # domains in production, so the cookie is genuinely cross-site — that
+    # requires SameSite=None, which browsers only honor when the cookie is
+    # also Secure. Local dev keeps Lax + non-secure: both sides are
+    # localhost there (Lax already sends the cookie fine for that), and
+    # Secure cookies over plain http are unreliable outside browser-specific
+    # localhost carve-outs, so there's no reason to rely on that.
+    cross_site = settings.environment != "development"
+    return {"samesite": "none" if cross_site else "lax", "secure": cross_site}
+
+
 def _set_auth_cookie(response: Response, user_id: str) -> None:
     settings = get_settings()
     response.set_cookie(
         key=ACCESS_TOKEN_COOKIE_NAME,
         value=create_access_token(user_id),
         httponly=True,
-        samesite="lax",
-        # Browsers reject Secure cookies over plain http:// (local dev);
-        # production always serves over https, where this must be true.
-        secure=settings.environment != "development",
         max_age=settings.access_token_expire_minutes * 60,
         path="/",
+        **_cookie_flags(),
     )
 
 
@@ -66,7 +76,7 @@ def login(request: LoginRequest, response: Response, db: Session = Depends(get_d
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(response: Response) -> None:
-    response.delete_cookie(ACCESS_TOKEN_COOKIE_NAME, path="/")
+    response.delete_cookie(ACCESS_TOKEN_COOKIE_NAME, path="/", **_cookie_flags())
 
 
 @router.get("/me", response_model=UserOut)
