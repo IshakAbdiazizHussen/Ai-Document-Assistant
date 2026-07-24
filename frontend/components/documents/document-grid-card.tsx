@@ -30,19 +30,19 @@ export function DocumentGridCard({ document }: { document: DocumentSummary }) {
   } = useDeleteDocument();
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-white/10 bg-zinc-900/40 transition-colors hover:border-white/20">
+    <div className="group relative overflow-hidden rounded-xl border border-zinc-200 bg-white transition-colors hover:border-zinc-300 dark:border-white/10 dark:bg-zinc-900/40 dark:hover:border-white/20">
       <Link href={`/dashboard/documents/${document.id}`} className="block">
         <div
-          className="flex h-32 items-center justify-center bg-zinc-900"
+          className="flex h-32 items-center justify-center bg-zinc-100 dark:bg-zinc-900"
           style={{
             backgroundImage:
               "repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 10px)",
           }}
         >
-          <FileText className="size-8 text-zinc-700" />
+          <FileText className="size-8 text-zinc-400 dark:text-zinc-700" />
         </div>
         <div className="flex flex-col gap-2 p-4">
-          <p className="truncate text-sm font-semibold text-white">{document.filename}</p>
+          <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{document.filename}</p>
           <p className="text-xs text-zinc-500">
             {formatFileSize(document.file_size_bytes)} · {formatRelativeTime(document.created_at)}
           </p>
@@ -61,7 +61,7 @@ export function DocumentGridCard({ document }: { document: DocumentSummary }) {
           render={
             <button
               aria-label={`Delete ${document.filename}`}
-              className="absolute top-2 right-2 z-10 flex size-8 items-center justify-center rounded-lg bg-zinc-950/80 text-zinc-400 opacity-0 backdrop-blur-sm transition-opacity hover:bg-zinc-950 hover:text-white group-hover:opacity-100"
+              className="absolute top-2 right-2 z-10 flex size-8 items-center justify-center rounded-lg bg-white/90 text-zinc-500 opacity-0 backdrop-blur-sm transition-opacity hover:bg-white hover:text-zinc-900 group-hover:opacity-100 dark:bg-zinc-950/80 dark:text-zinc-400 dark:hover:bg-zinc-950 dark:hover:text-white"
             />
           }
         >

@@ -89,7 +89,7 @@ export default function ConversationsPage() {
                 placeholder="Search conversations..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 w-40 rounded-lg border border-white/10 bg-white/5 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-violet-500/60 sm:w-64"
+                className="h-10 w-40 rounded-lg border border-zinc-200 bg-zinc-100 pl-9 pr-3 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-500 focus:border-violet-500/60 sm:w-64 dark:border-white/10 dark:bg-white/5 dark:text-white"
               />
             </div>
             <NewConversationMenu documents={documents} />
@@ -101,12 +101,12 @@ export default function ConversationsPage() {
         {isPending ? (
           <div className="mx-auto flex w-full max-w-4xl flex-col gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg bg-white/5" />
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
         ) : isError ? (
           <div className="m-auto flex flex-col items-center gap-2 text-center">
-            <p className="font-medium text-white">Couldn&rsquo;t load conversations</p>
+            <p className="font-medium text-zinc-900 dark:text-white">Couldn&rsquo;t load conversations</p>
             <p className="max-w-xs text-sm text-zinc-500">Something went wrong. Try again.</p>
             <button
               onClick={() => refetch()}
@@ -155,14 +155,14 @@ function NewConversationMenu({
         <Plus className="size-4" />
         <span className="hidden min-[960px]:inline">New conversation</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 border border-white/10 bg-zinc-900 text-zinc-200">
+      <DropdownMenuContent className="w-64">
         {!documents || documents.length === 0 ? (
-          <p className="px-2 py-1.5 text-xs text-zinc-500">Upload a document first.</p>
+          <p className="px-2 py-1.5 text-xs text-muted-foreground">Upload a document first.</p>
         ) : (
           documents.map((doc) => (
             <DropdownMenuItem
               key={doc.id}
-              className="truncate focus:bg-white/10 focus:text-white"
+              className="truncate"
               render={<Link href={`/dashboard/documents/${doc.id}?new=1`} />}
             >
               {doc.filename}
@@ -196,7 +196,7 @@ function ConversationRow({ session }: { session: ChatSessionSummary }) {
 
   const primaryContent = (
     <div className="flex min-w-0 flex-1 items-center gap-3">
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-950/60 text-violet-400">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-400">
         <MessageSquare className="size-4" />
       </span>
 
@@ -211,28 +211,28 @@ function ConversationRow({ session }: { session: ChatSessionSummary }) {
                 if (e.key === "Enter") submitRename();
                 if (e.key === "Escape") setRenaming(false);
               }}
-              className="h-7 w-full rounded-md border border-white/20 bg-zinc-900 px-2 text-sm text-white outline-none focus:border-violet-500/60"
+              className="h-7 w-full rounded-md border border-zinc-300 bg-white px-2 text-sm text-zinc-900 outline-none focus:border-violet-500/60 dark:border-white/20 dark:bg-zinc-900 dark:text-white"
             />
             <button
               onClick={submitRename}
               aria-label="Save"
-              className="flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
+              className="flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
             >
               <Check className="size-3.5" />
             </button>
             <button
               onClick={() => setRenaming(false)}
               aria-label="Cancel"
-              className="flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-400 hover:bg-white/10 hover:text-white"
+              className="flex size-6 shrink-0 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-white"
             >
               <X className="size-3.5" />
             </button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-semibold text-white">{title}</p>
+            <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{title}</p>
             {session.document_filename ? (
-              <span className="shrink-0 truncate rounded-md bg-white/5 px-1.5 py-0.5 text-[11px] text-zinc-400">
+              <span className="shrink-0 truncate rounded-md bg-zinc-100 px-1.5 py-0.5 text-[11px] text-zinc-600 dark:bg-white/5 dark:text-zinc-400">
                 {session.document_filename}
               </span>
             ) : null}
@@ -247,7 +247,7 @@ function ConversationRow({ session }: { session: ChatSessionSummary }) {
 
   return (
     <>
-      <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-white/2 px-4 py-3 transition-colors hover:bg-white/5">
+      <div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white px-4 py-3 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:bg-white/2 dark:hover:bg-white/5">
         {href && !renaming ? (
           <Link href={href} className="flex min-w-0 flex-1">
             {primaryContent}
@@ -266,7 +266,7 @@ function ConversationRow({ session }: { session: ChatSessionSummary }) {
                 setDraftTitle(session.title ?? "");
                 setRenaming(true);
               }}
-              className="flex size-7 items-center justify-center rounded-md hover:bg-white/10 hover:text-white"
+              className="flex size-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white"
             >
               <Pencil className="size-3.5" />
             </button>
@@ -274,8 +274,8 @@ function ConversationRow({ session }: { session: ChatSessionSummary }) {
               aria-label={session.pinned ? "Unpin" : "Pin"}
               onClick={() => update({ sessionId: session.id, updates: { pinned: !session.pinned } })}
               className={cn(
-                "flex size-7 items-center justify-center rounded-md hover:bg-white/10 hover:text-white",
-                session.pinned && "text-violet-400",
+                "flex size-7 items-center justify-center rounded-md hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-white/10 dark:hover:text-white",
+                session.pinned && "text-violet-600 dark:text-violet-400",
               )}
             >
               <Pin className={cn("size-3.5", session.pinned && "fill-current")} />

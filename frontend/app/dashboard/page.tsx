@@ -62,7 +62,7 @@ export default function DashboardPage() {
                 placeholder="Search documents..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="h-10 w-40 rounded-lg border border-white/10 bg-white/5 pl-9 pr-3 text-sm text-white outline-none transition-colors placeholder:text-zinc-500 focus:border-violet-500/60 sm:w-64"
+                className="h-10 w-40 rounded-lg border border-zinc-200 bg-zinc-100 pl-9 pr-3 text-sm text-zinc-900 outline-none transition-colors placeholder:text-zinc-500 focus:border-violet-500/60 sm:w-64 dark:border-white/10 dark:bg-white/5 dark:text-white"
               />
             </div>
             <button
@@ -87,13 +87,13 @@ export default function DashboardPage() {
         {isPending ? (
           <div className="mx-auto flex w-full max-w-3xl flex-col gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 w-full rounded-lg bg-white/5" />
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
             ))}
           </div>
         ) : isError ? (
           <div className="m-auto flex flex-col items-center gap-2 text-center">
             <UploadCloud className="size-6 text-zinc-500" />
-            <p className="font-medium text-white">Couldn&rsquo;t load documents</p>
+            <p className="font-medium text-zinc-900 dark:text-white">Couldn&rsquo;t load documents</p>
             <p className="max-w-xs text-sm text-zinc-500">
               Something went wrong fetching your documents.
             </p>
@@ -117,14 +117,14 @@ export default function DashboardPage() {
               e.preventDefault();
               openUpload(Array.from(e.dataTransfer.files));
             }}
-            className="m-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-white/15 p-10 text-center transition-colors hover:bg-white/3"
+            className="m-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 p-10 text-center transition-colors hover:bg-zinc-50 dark:border-white/15 dark:hover:bg-white/3"
           >
-            <span className="flex size-14 items-center justify-center rounded-xl border border-dashed border-white/15 text-zinc-500">
+            <span className="flex size-14 items-center justify-center rounded-xl border border-dashed border-zinc-300 text-zinc-500 dark:border-white/15">
               <Upload className="size-5" />
             </span>
             <div className="space-y-1.5">
-              <p className="font-semibold text-white">Upload your first document</p>
-              <p className="text-sm text-zinc-400">
+              <p className="font-semibold text-zinc-900 dark:text-white">Upload your first document</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 PDF, DOCX, or TXT files up to 20MB. We&rsquo;ll read and index them
                 right away.
               </p>
@@ -163,8 +163,8 @@ export default function DashboardPage() {
                       className={cn(
                         "rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors",
                         active
-                          ? "bg-violet-600/15 font-semibold text-violet-400"
-                          : "text-zinc-400 hover:text-zinc-200",
+                          ? "bg-violet-600/15 font-semibold text-violet-700 dark:text-violet-400"
+                          : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200",
                       )}
                     >
                       {key === "all" ? `${label} (${count})` : label}
@@ -173,13 +173,15 @@ export default function DashboardPage() {
                 })}
               </div>
 
-              <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1">
+              <div className="flex items-center gap-1 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-white/5">
                 <button
                   aria-label="Grid view"
                   onClick={() => setView("grid")}
                   className={cn(
                     "flex size-7 items-center justify-center rounded-md transition-colors",
-                    view === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300",
+                    view === "grid"
+                      ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white dark:shadow-none"
+                      : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
                   )}
                 >
                   <LayoutGrid className="size-4" />
@@ -189,7 +191,9 @@ export default function DashboardPage() {
                   onClick={() => setView("list")}
                   className={cn(
                     "flex size-7 items-center justify-center rounded-md transition-colors",
-                    view === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-zinc-300",
+                    view === "list"
+                      ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white dark:shadow-none"
+                      : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300",
                   )}
                 >
                   <List className="size-4" />
@@ -228,13 +232,13 @@ function MobileDocumentRow({ document }: { document: DocumentSummary }) {
   return (
     <Link
       href={`/dashboard/documents/${document.id}`}
-      className="flex items-center gap-3 rounded-xl border border-white/10 bg-zinc-900/40 px-4 py-3"
+      className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-white/10 dark:bg-zinc-900/40"
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-white/5 text-zinc-400">
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
         <FileText className="size-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-white">{document.filename}</p>
+        <p className="truncate text-sm font-semibold text-zinc-900 dark:text-white">{document.filename}</p>
         <p className="truncate text-xs text-zinc-500">
           {document.page_count ? `${document.page_count} pages · ` : ""}
           {formatRelativeTime(document.created_at)}

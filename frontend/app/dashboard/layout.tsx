@@ -22,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (isPending || !user) {
     return (
-      <div className="flex min-h-screen flex-1 items-center justify-center bg-zinc-950">
+      <div className="flex min-h-screen flex-1 items-center justify-center bg-white dark:bg-zinc-950">
         <Loader2 className="size-6 animate-spin text-zinc-500" />
       </div>
     );
@@ -34,8 +34,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="flex min-w-0 flex-1 flex-col">
         <main
           className={cn(
-            "flex flex-1 flex-col overflow-y-auto bg-zinc-950 text-zinc-200",
-            !isDocumentDetailRoute && "pb-16 min-[960px]:pb-0",
+            "flex flex-1 flex-col overflow-y-auto",
+            isDocumentDetailRoute
+              ? "bg-zinc-950 text-zinc-200"
+              : "bg-white text-zinc-700 pb-16 dark:bg-zinc-950 dark:text-zinc-200 min-[960px]:pb-0",
           )}
         >
           {children}
