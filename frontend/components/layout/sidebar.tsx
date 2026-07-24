@@ -158,10 +158,10 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
               {formatFileSize(usedBytes)} / {formatFileSize(STORAGE_QUOTA_BYTES)}
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+          <div className="h-2.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: "#0b1c3a" }}>
             <div
-              className="h-full rounded-full bg-violet-500"
-              style={{ width: `${usedPercent}%` }}
+              className="h-full rounded-full"
+              style={{ width: `${usedPercent}%`, backgroundColor: "#2f7fe0" }}
             />
           </div>
         </div>
