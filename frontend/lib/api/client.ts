@@ -9,6 +9,10 @@ import axios, { AxiosError } from "axios";
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 30000,
+  // The backend runs on a different origin (localhost:8000 vs the
+  // frontend's localhost:3000) and authenticates via an httpOnly cookie —
+  // without this, the browser never attaches/accepts that cookie cross-origin.
+  withCredentials: true,
 });
 
 export class ApiError extends Error {

@@ -18,6 +18,8 @@ class ChunkRecord:
     chunk_index: int
     text: str
     embedding: list[float]
+    page_number: int = 1
+    user_id: str = ""
 
 
 @dataclass
@@ -26,6 +28,7 @@ class SearchResult:
     document_id: str
     text: str
     score: float
+    page_number: int = 1
 
 
 @lru_cache
@@ -52,7 +55,12 @@ def add_chunks(document_id: str, chunk_records: list[ChunkRecord]) -> list[str]:
             embeddings=[record.embedding for record in chunk_records],
             documents=[record.text for record in chunk_records],
             metadatas=[
-                {"document_id": str(document_id), "chunk_index": record.chunk_index}
+                {
+                    "document_id": str(document_id),
+                    "chunk_index": record.chunk_index,
+                    "page_number": record.page_number,
+                    "user_id": record.user_id,
+                }
                 for record in chunk_records
             ],
         )
@@ -62,11 +70,32 @@ def add_chunks(document_id: str, chunk_records: list[ChunkRecord]) -> list[str]:
     return [record.chunk_id for record in chunk_records]
 
 
-def query(embedding: list[float], top_k: int = 5, document_id: str | None = None) -> list[SearchResult]:
-    """Return the top_k most similar chunks, optionally scoped to one document."""
+def query(
+    embedding: list[float],
+    top_k: int = 5,
+    document_id: str | None = None,
+    user_id: str | None = None,
+) -> list[SearchResult]:
+    """Return the top_k most similar chunks. Scoped to one document when
+    document_id is given; otherwise scoped to user_id so one account's
+    question never retrieves another account's chunks (docs/03-constraints.md
+    — document content is only accessible to the user who owns it).
+    """
+    conditions = []
+    if document_id is not None:
+        conditions.append({"document_id": str(document_id)})
+    if user_id is not None:
+        conditions.append({"user_id": str(user_id)})
+
+    if len(conditions) > 1:
+        where = {"$and": conditions}
+    elif conditions:
+        where = conditions[0]
+    else:
+        where = None
+
     try:
         collection = _get_collection()
-        where = {"document_id": str(document_id)} if document_id is not None else None
         result = collection.query(query_embeddings=[embedding], n_results=top_k, where=where)
     except Exception as exc:
         raise VectorStoreError(f"Failed to query embeddings: {type(exc).__name__}") from exc
@@ -82,6 +111,7 @@ def query(embedding: list[float], top_k: int = 5, document_id: str | None = None
             document_id=str(metadata.get("document_id", "")),
             text=text,
             score=1.0 - distance,
+            page_number=int(metadata.get("page_number", 1)),
         )
         for chunk_id, text, metadata, distance in zip(ids, documents, metadatas, distances)
     ]

@@ -7,6 +7,7 @@ import { getErrorMessage } from "@/lib/api/client";
 import {
   deleteDocument,
   getDocument,
+  getDocumentPage,
   listDocuments,
   uploadDocument,
 } from "@/lib/api/documents";
@@ -33,10 +34,18 @@ export function useDocument(id: string) {
   });
 }
 
+export function useDocumentPage(id: string | undefined, pageNumber: number | undefined) {
+  return useQuery({
+    queryKey: [...documentsKey, id, "pages", pageNumber],
+    queryFn: () => getDocumentPage(id!, pageNumber!),
+    enabled: Boolean(id) && Boolean(pageNumber),
+  });
+}
+
 export function useUploadDocument() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: uploadDocument,
+    mutationFn: (file: File) => uploadDocument(file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: documentsKey });
       toast.success("Document uploaded — processing started.");

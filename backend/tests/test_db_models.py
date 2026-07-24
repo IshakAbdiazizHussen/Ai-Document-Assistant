@@ -24,7 +24,7 @@ def db_session():
 
 
 def test_document_chunk_relationship_and_cascade_delete(db_session: Session):
-    user = User(email="test@example.com")
+    user = User(email="test@example.com", hashed_password="unused-hash")
     db_session.add(user)
     db_session.flush()
 

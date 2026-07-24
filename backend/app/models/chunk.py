@@ -15,6 +15,7 @@ class Chunk(Base):
         ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True
     )
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     vector_id: Mapped[str | None] = mapped_column(String, nullable=True)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False)

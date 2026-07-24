@@ -14,12 +14,13 @@ from app.db.session import SessionLocal
 from app.main import app
 from app.models import ChatMessage, ChatSession, Chunk, Document, DocumentStatus
 from app.services import chat_service
-from app.services.document_service import get_or_create_default_user
+from tests.conftest import register_test_user
 
 
 @pytest.fixture
 def client():
     with TestClient(app) as c:
+        register_test_user(c)
         yield c
 
 
@@ -42,7 +43,7 @@ def stub_answer_question(monkeypatch):
     test_rag.py.
     """
 
-    def fake_answer_question(db, question, document_id=None, top_k=None):
+    def fake_answer_question(db, question, user, document_id=None, top_k=None):
         return {
             "answer": f"Stubbed answer to: {question}",
             "sources": [
@@ -146,7 +147,7 @@ def test_overly_long_message_rejected_with_422(client):
 
 
 def test_forced_pipeline_failure_returns_clean_error_without_leaking_internals(client, monkeypatch):
-    def raise_embedding_error(db, question, document_id=None, top_k=None):
+    def raise_embedding_error(db, question, user, document_id=None, top_k=None):
         raise EmbeddingError("Embedding request failed: AuthenticationError (status 401)")
 
     monkeypatch.setattr(chat_service, "answer_question", raise_embedding_error)
@@ -169,7 +170,7 @@ def test_session_remains_usable_after_a_pipeline_failure(
     session_id = first.json()["session_id"]
     created_session_ids.append(uuid.UUID(session_id))
 
-    def raise_llm_error(db, question, document_id=None, top_k=None):
+    def raise_llm_error(db, question, user, document_id=None, top_k=None):
         raise LLMError("Chat completion request failed: InternalServerError (status 500)")
 
     monkeypatch.setattr(chat_service, "answer_question", raise_llm_error)
@@ -230,12 +231,12 @@ def mock_chat_client(monkeypatch):
 
 
 @pytest.fixture
-def two_seeded_documents(isolated_vector_store):
+def two_seeded_documents(isolated_vector_store, client_user):
     with SessionLocal() as db:
-        user = get_or_create_default_user(db)
+        user_id = uuid.UUID(client_user["id"])
 
         doc_a = Document(
-            user_id=user.id,
+            user_id=user_id,
             filename="doc-a.txt",
             file_type="txt",
             file_size_bytes=1,
@@ -243,7 +244,7 @@ def two_seeded_documents(isolated_vector_store):
             storage_path="unused",
         )
         doc_b = Document(
-            user_id=user.id,
+            user_id=user_id,
             filename="doc-b.txt",
             file_type="txt",
             file_size_bytes=1,
@@ -271,11 +272,27 @@ def two_seeded_documents(isolated_vector_store):
 
     vector_store.add_chunks(
         str(doc_a_id),
-        [ChunkRecord(chunk_id=chunk_a_id, chunk_index=0, text="Document A real content.", embedding=[1.0, 0.0])],
+        [
+            ChunkRecord(
+                chunk_id=chunk_a_id,
+                chunk_index=0,
+                text="Document A real content.",
+                embedding=[1.0, 0.0],
+                user_id=str(user_id),
+            )
+        ],
     )
     vector_store.add_chunks(
         str(doc_b_id),
-        [ChunkRecord(chunk_id=chunk_b_id, chunk_index=0, text="Document B real content.", embedding=[0.0, 1.0])],
+        [
+            ChunkRecord(
+                chunk_id=chunk_b_id,
+                chunk_index=0,
+                text="Document B real content.",
+                embedding=[0.0, 1.0],
+                user_id=str(user_id),
+            )
+        ],
     )
 
     yield {"doc_a_id": doc_a_id, "doc_b_id": doc_b_id, "chunk_a_id": chunk_a_id, "chunk_b_id": chunk_b_id}

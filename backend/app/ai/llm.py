@@ -16,7 +16,12 @@ SYSTEM_PROMPT = (
     "from the user's own uploaded documents. Do not use any outside "
     "knowledge, and do not guess. If the context does not contain enough "
     "information to answer the question, say clearly that the information "
-    "is not available in the provided documents instead of answering."
+    "is not available in the provided documents instead of answering. "
+    "Each context passage is labeled [Source N]. When a claim in your "
+    "answer is drawn from a passage, cite it inline immediately after the "
+    "claim using that same bracketed number, e.g. \"revenue grew 18% [1]\". "
+    "Only cite sources that were actually provided; never invent a source "
+    "number."
 )
 
 _NO_CONTEXT_PLACEHOLDER = "(No relevant passages were found in the documents.)"

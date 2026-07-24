@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api/client";
-import type { ChatMessage, ChatResponse, ChatSource } from "@/lib/types/chat";
+import type { ChatMessage, ChatResponse, ChatSessionSummary, ChatSource } from "@/lib/types/chat";
 
 /**
  * Real implementation of the /chat API (docs/05-backend-remaining-features.md
@@ -31,6 +31,23 @@ export async function getSessionMessages(
     `/chat/${sessionId}/messages`,
   );
   return data.map((message) => ({ ...message, session_id: sessionId }));
+}
+
+export async function listChatSessions(): Promise<ChatSessionSummary[]> {
+  const { data } = await apiClient.get<ChatSessionSummary[]>("/chat/sessions");
+  return data;
+}
+
+export async function updateChatSession(
+  sessionId: string,
+  updates: { title?: string; pinned?: boolean },
+): Promise<ChatSessionSummary> {
+  const { data } = await apiClient.patch<ChatSessionSummary>(`/chat/sessions/${sessionId}`, updates);
+  return data;
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  await apiClient.delete(`/chat/sessions/${sessionId}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept to match the API's established signature; see comment below.

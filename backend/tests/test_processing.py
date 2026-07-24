@@ -9,13 +9,14 @@ from fastapi.testclient import TestClient
 from app.core.config import Settings
 from app.db.session import SessionLocal
 from app.main import app
-from app.models import Chunk, Document, DocumentStatus, User
+from app.models import Chunk, Document, DocumentStatus
 from app.processing.chunker import chunk_text, count_tokens
 from app.processing.cleaner import clean_text
 from app.processing.extractor import ExtractionError, extract_text
 from app.services import document_service
-from app.services.document_service import DEFAULT_USER_EMAIL, process_document
+from app.services.document_service import process_document
 from app.utils import file_validation
+from tests.conftest import make_user, register_test_user
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -142,12 +143,7 @@ def _make_document(db, tmp_path: Path, fixture_name: str, file_type: str) -> Doc
     dest = tmp_path / fixture_name
     shutil.copy(FIXTURES_DIR / fixture_name, dest)
 
-    user = db.query(User).filter(User.email == DEFAULT_USER_EMAIL).first()
-    if user is None:
-        user = User(email=DEFAULT_USER_EMAIL)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = make_user(db)
 
     document = Document(
         user_id=user.id,
@@ -233,6 +229,7 @@ def tmp_upload_settings(tmp_path, monkeypatch):
 
 def test_upload_route_processes_pdf_to_ready(tmp_upload_settings, created_document_ids):
     with TestClient(app) as client, open(FIXTURES_DIR / "sample.pdf", "rb") as pdf_file:
+        register_test_user(client)
         response = client.post(
             "/documents/upload",
             files={"file": ("sample.pdf", pdf_file, "application/pdf")},

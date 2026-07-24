@@ -10,6 +10,7 @@ from app.main import app
 from app.models import Document
 from app.services import document_service
 from app.utils import file_validation
+from tests.conftest import register_test_user
 
 
 @pytest.fixture
@@ -51,6 +52,7 @@ def uploaded_ids():
 @pytest.fixture
 def client(tmp_settings):
     with TestClient(app) as c:
+        register_test_user(c)
         yield c
 
 

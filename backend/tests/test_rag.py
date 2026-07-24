@@ -10,9 +10,10 @@ from app.ai import llm, vector_store
 from app.ai.llm import LLMError
 from app.ai.vector_store import ChunkRecord
 from app.db.session import SessionLocal
-from app.models import Document, DocumentStatus, User
+from app.models import Document, DocumentStatus
 from app.services import chat_service
-from app.services.document_service import DEFAULT_USER_EMAIL, DocumentNotFoundError
+from app.services.document_service import DocumentNotFoundError
+from tests.conftest import make_user
 
 PARIS_TEXT = "The capital of France is Paris, a major European city."
 PYTHON_TEXT = "Python is a programming language created by Guido van Rossum in 1991."
@@ -97,12 +98,7 @@ def seeded_documents(isolated_vector_store):
     vector store: docA (Paris, Python) and docB (Docker only).
     """
     with SessionLocal() as setup_db:
-        user = setup_db.query(User).filter(User.email == DEFAULT_USER_EMAIL).first()
-        if user is None:
-            user = User(email=DEFAULT_USER_EMAIL)
-            setup_db.add(user)
-            setup_db.commit()
-            setup_db.refresh(user)
+        user = make_user(setup_db)
 
         doc_a = Document(
             user_id=user.id,
@@ -125,22 +121,41 @@ def seeded_documents(isolated_vector_store):
         setup_db.refresh(doc_a)
         setup_db.refresh(doc_b)
         doc_a_id, doc_b_id = doc_a.id, doc_b.id
+        user_id = str(user.id)
 
     vector_store.add_chunks(
         str(doc_a_id),
         [
-            ChunkRecord(chunk_id="chunk-paris", chunk_index=0, text=PARIS_TEXT, embedding=[1.0, 0.0, 0.0]),
             ChunkRecord(
-                chunk_id="chunk-python", chunk_index=1, text=PYTHON_TEXT, embedding=[0.0, 1.0, 0.0]
+                chunk_id="chunk-paris",
+                chunk_index=0,
+                text=PARIS_TEXT,
+                embedding=[1.0, 0.0, 0.0],
+                user_id=user_id,
+            ),
+            ChunkRecord(
+                chunk_id="chunk-python",
+                chunk_index=1,
+                text=PYTHON_TEXT,
+                embedding=[0.0, 1.0, 0.0],
+                user_id=user_id,
             ),
         ],
     )
     vector_store.add_chunks(
         str(doc_b_id),
-        [ChunkRecord(chunk_id="chunk-docker", chunk_index=0, text=DOCKER_TEXT, embedding=[0.0, 0.0, 1.0])],
+        [
+            ChunkRecord(
+                chunk_id="chunk-docker",
+                chunk_index=0,
+                text=DOCKER_TEXT,
+                embedding=[0.0, 0.0, 1.0],
+                user_id=user_id,
+            )
+        ],
     )
 
-    yield doc_a_id, doc_b_id
+    yield user, doc_a_id, doc_b_id
 
     with SessionLocal() as cleanup_db:
         cleanup_db.query(Document).filter(Document.id.in_([doc_a_id, doc_b_id])).delete(
@@ -152,7 +167,8 @@ def seeded_documents(isolated_vector_store):
 def test_known_answer_question_returns_correct_source_cited_answer(
     db, seeded_documents, fake_question_embeddings, mock_chat_client
 ):
-    result = chat_service.answer_question(db, "What is the capital of France?")
+    user, _doc_a_id, _doc_b_id = seeded_documents
+    result = chat_service.answer_question(db, "What is the capital of France?", user)
 
     assert "Paris" in result["answer"]
     source_chunk_ids = {source["chunk_id"] for source in result["sources"]}
@@ -162,8 +178,9 @@ def test_known_answer_question_returns_correct_source_cited_answer(
 def test_out_of_scope_question_declines_without_fabricating(
     db, seeded_documents, fake_question_embeddings, mock_chat_client
 ):
+    user, _doc_a_id, _doc_b_id = seeded_documents
     result = chat_service.answer_question(
-        db, "What is the airspeed velocity of an unladen swallow?"
+        db, "What is the airspeed velocity of an unladen swallow?", user
     )
 
     assert "not available" in result["answer"].lower()
@@ -176,12 +193,14 @@ def test_out_of_scope_question_declines_without_fabricating(
 def test_document_scoped_question_never_leaks_other_documents_sources(
     db, seeded_documents, fake_question_embeddings, mock_chat_client
 ):
-    doc_a_id, doc_b_id = seeded_documents
+    user, doc_a_id, doc_b_id = seeded_documents
 
     # Ask a France question but scope retrieval to docB, which only has
     # Docker content. Regardless of docA's Paris chunk being the globally
     # closer match, it must never appear in the returned sources.
-    result = chat_service.answer_question(db, "What is the capital of France?", document_id=doc_b_id)
+    result = chat_service.answer_question(
+        db, "What is the capital of France?", user, document_id=doc_b_id
+    )
 
     for source in result["sources"]:
         assert source["document_id"] == str(doc_b_id)
@@ -192,15 +211,19 @@ def test_document_scoped_question_never_leaks_other_documents_sources(
 def test_document_scoped_question_raises_for_unknown_document(
     db, seeded_documents, fake_question_embeddings, mock_chat_client
 ):
+    user, _doc_a_id, _doc_b_id = seeded_documents
     with pytest.raises(DocumentNotFoundError):
-        chat_service.answer_question(db, "What is the capital of France?", document_id=uuid.uuid4())
+        chat_service.answer_question(
+            db, "What is the capital of France?", user, document_id=uuid.uuid4()
+        )
 
 
 def test_empty_retrieval_still_returns_graceful_response(
     db, isolated_vector_store, fake_question_embeddings, mock_chat_client
 ):
     # Nothing seeded at all -- retrieval finds no chunks whatsoever.
-    result = chat_service.answer_question(db, "What is the capital of France?")
+    user = make_user(db)
+    result = chat_service.answer_question(db, "What is the capital of France?", user)
 
     assert result["sources"] == []
     assert "not available" in result["answer"].lower()

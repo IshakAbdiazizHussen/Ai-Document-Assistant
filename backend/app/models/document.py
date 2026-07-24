@@ -22,6 +22,7 @@ class Document(Base):
     filename: Mapped[str] = mapped_column(String, nullable=False)
     file_type: Mapped[str] = mapped_column(String, nullable=False)
     file_size_bytes: Mapped[int] = mapped_column(Integer, nullable=False)
+    page_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
     status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus, name="document_status", native_enum=True),
         nullable=False,
@@ -36,6 +37,9 @@ class Document(Base):
 
     user: Mapped["User"] = relationship(back_populates="documents")
     chunks: Mapped[list["Chunk"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan", passive_deletes=True
+    )
+    pages: Mapped[list["DocumentPage"]] = relationship(
         back_populates="document", cascade="all, delete-orphan", passive_deletes=True
     )
     chat_sessions: Mapped[list["ChatSession"]] = relationship(back_populates="document")

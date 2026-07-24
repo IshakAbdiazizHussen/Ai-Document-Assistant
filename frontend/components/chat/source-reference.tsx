@@ -1,33 +1,37 @@
 "use client";
 
-import { ChevronDown, FileText } from "lucide-react";
-import { useState } from "react";
+import { FileText } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { ChatSource } from "@/lib/types/chat";
 
-export function SourceReference({ source }: { source: ChatSource }) {
-  const [open, setOpen] = useState(false);
-
+export function SourceReference({
+  source,
+  filename,
+  onSelect,
+}: {
+  source: ChatSource;
+  filename?: string;
+  onSelect?: () => void;
+}) {
   return (
-    <div className="w-full rounded-md border border-border bg-muted/40 text-xs">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center gap-1.5 px-2 py-1 text-left text-muted-foreground hover:text-foreground"
-        aria-expanded={open}
-      >
-        <FileText className="size-3 shrink-0" />
-        <span className="truncate">Source: {source.document_id}</span>
-        <ChevronDown
-          className={cn("ml-auto size-3 shrink-0 transition-transform", open && "rotate-180")}
-        />
-      </button>
-      {open ? (
-        <p className="border-t border-border px-2 py-1.5 text-muted-foreground">
-          {source.excerpt}
-        </p>
-      ) : null}
-    </div>
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={!onSelect}
+      className={cn(
+        "w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-left text-xs transition-colors",
+        onSelect && "hover:border-primary/40 hover:bg-muted/60",
+      )}
+    >
+      <span className="flex items-center gap-1.5 font-semibold text-foreground">
+        <FileText className="size-3 shrink-0 text-muted-foreground" />
+        <span className="truncate">{filename ?? source.document_id}</span>
+        {source.page_number ? (
+          <span className="shrink-0 font-normal text-muted-foreground">· p.{source.page_number}</span>
+        ) : null}
+      </span>
+      <p className="mt-1 line-clamp-2 text-muted-foreground">&ldquo;{source.excerpt}&rdquo;</p>
+    </button>
   );
 }

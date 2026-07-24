@@ -1,15 +1,18 @@
 import uuid
+from datetime import datetime, timezone
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.ai import vector_store
 from app.ai.embeddings import embed_texts
 from app.ai.llm import generate_answer
 from app.core.config import get_settings
-from app.models import ChatMessage, ChatRole, ChatSession
-from app.services.document_service import get_document, get_or_create_default_user
+from app.models import ChatMessage, ChatRole, ChatSession, User
+from app.services.document_service import get_document_for_user
 
 _EXCERPT_MAX_LENGTH = 300
+_TITLE_MAX_LENGTH = 60
 
 
 class ChatSessionNotFoundError(Exception):
@@ -19,18 +22,20 @@ class ChatSessionNotFoundError(Exception):
 def answer_question(
     db: Session,
     question: str,
+    user: User,
     document_id: uuid.UUID | str | None = None,
     top_k: int | None = None,
 ) -> dict:
     """Answer a question via RAG: embed it, retrieve the most similar
-    chunks (optionally scoped to one document), and generate a grounded
-    answer from only those chunks.
+    chunks (scoped to one document if given, else to every document this
+    user owns), and generate a grounded answer from only those chunks.
 
-    Raises DocumentNotFoundError if document_id is given but doesn't exist.
+    Raises DocumentNotFoundError if document_id is given but doesn't exist
+    or belongs to a different user.
     """
     if document_id is not None:
         document_id = uuid.UUID(str(document_id))
-        get_document(db, document_id)  # raises DocumentNotFoundError if missing
+        get_document_for_user(db, document_id, user)  # raises DocumentNotFoundError if not this user's
 
     settings = get_settings()
     k = top_k if top_k is not None else settings.retrieval_top_k
@@ -40,6 +45,7 @@ def answer_question(
         question_embedding,
         top_k=k,
         document_id=str(document_id) if document_id is not None else None,
+        user_id=str(user.id),
     )
 
     answer = generate_answer(question, retrieved_chunks)
@@ -49,6 +55,7 @@ def answer_question(
             "chunk_id": chunk.chunk_id,
             "document_id": chunk.document_id,
             "excerpt": _excerpt(chunk.text),
+            "page_number": chunk.page_number,
         }
         for chunk in retrieved_chunks
     ]
@@ -65,6 +72,7 @@ def _excerpt(text: str) -> str:
 def send_message(
     db: Session,
     message: str,
+    user: User,
     session_id: uuid.UUID | None = None,
     document_id: uuid.UUID | None = None,
 ) -> dict:
@@ -78,14 +86,17 @@ def send_message(
     written. The caller (the /chat route) is responsible for turning that
     exception into a clean HTTP error.
     """
-    session = _get_or_create_session(db, session_id, document_id)
+    session = _get_or_create_session(db, user, session_id, document_id)
     effective_document_id = document_id if document_id is not None else session.document_id
 
     user_message = ChatMessage(session_id=session.id, role=ChatRole.USER, content=message)
     db.add(user_message)
+    if session.title is None:
+        session.title = _derive_title(message)
+    session.updated_at = datetime.now(timezone.utc)
     db.commit()
 
-    result = answer_question(db, message, document_id=effective_document_id)
+    result = answer_question(db, message, user, document_id=effective_document_id)
 
     source_chunk_ids = [source["chunk_id"] for source in result["sources"]]
     assistant_message = ChatMessage(
@@ -95,15 +106,94 @@ def send_message(
         source_chunk_ids=source_chunk_ids,
     )
     db.add(assistant_message)
+    session.updated_at = datetime.now(timezone.utc)
     db.commit()
 
     return {"answer": result["answer"], "sources": result["sources"], "session_id": session.id}
 
 
-def get_session_messages(db: Session, session_id: uuid.UUID) -> list[ChatMessage]:
+def _derive_title(first_message: str) -> str:
+    # Titled from the user's own first message rather than a separate LLM
+    # summarization call, to keep the MVP simple (docs/03-constraints.md).
+    stripped = first_message.strip()
+    if len(stripped) <= _TITLE_MAX_LENGTH:
+        return stripped
+    return stripped[:_TITLE_MAX_LENGTH].rstrip() + "…"
+
+
+def list_sessions(db: Session, user: User) -> list[dict]:
+    """Summarize every chat session belonging to `user`, most recently
+    active first, pinned sessions always leading.
+    """
+    sessions = (
+        db.query(ChatSession)
+        .filter(ChatSession.user_id == user.id)
+        .order_by(ChatSession.pinned.desc(), ChatSession.updated_at.desc())
+        .all()
+    )
+
+    summaries = []
+    for session in sessions:
+        message_count = (
+            db.query(func.count(ChatMessage.id)).filter(ChatMessage.session_id == session.id).scalar()
+        )
+        last_message = (
+            db.query(ChatMessage)
+            .filter(ChatMessage.session_id == session.id)
+            .order_by(ChatMessage.created_at.desc())
+            .first()
+        )
+        summaries.append(
+            {
+                "id": session.id,
+                "title": session.title,
+                "document_id": session.document_id,
+                "document_filename": session.document.filename if session.document else None,
+                "message_count": message_count,
+                "last_message_preview": _excerpt(last_message.content) if last_message else None,
+                "pinned": session.pinned,
+                "created_at": session.created_at,
+                "updated_at": session.updated_at,
+            }
+        )
+    return summaries
+
+
+def _get_owned_session(db: Session, session_id: uuid.UUID, user: User) -> ChatSession:
     session = db.get(ChatSession, session_id)
-    if session is None:
+    if session is None or session.user_id != user.id:
+        # Same error either way — never confirm another user's session ID.
         raise ChatSessionNotFoundError(f"Chat session {session_id} not found.")
+    return session
+
+
+def update_session(
+    db: Session,
+    session_id: uuid.UUID,
+    user: User,
+    title: str | None = None,
+    pinned: bool | None = None,
+) -> ChatSession:
+    session = _get_owned_session(db, session_id, user)
+
+    if title is not None:
+        session.title = title.strip()[:_TITLE_MAX_LENGTH] or session.title
+    if pinned is not None:
+        session.pinned = pinned
+
+    db.commit()
+    db.refresh(session)
+    return session
+
+
+def delete_session(db: Session, session_id: uuid.UUID, user: User) -> None:
+    session = _get_owned_session(db, session_id, user)
+    db.delete(session)
+    db.commit()
+
+
+def get_session_messages(db: Session, session_id: uuid.UUID, user: User) -> list[ChatMessage]:
+    _get_owned_session(db, session_id, user)
 
     return (
         db.query(ChatMessage)
@@ -114,15 +204,11 @@ def get_session_messages(db: Session, session_id: uuid.UUID) -> list[ChatMessage
 
 
 def _get_or_create_session(
-    db: Session, session_id: uuid.UUID | None, document_id: uuid.UUID | None
+    db: Session, user: User, session_id: uuid.UUID | None, document_id: uuid.UUID | None
 ) -> ChatSession:
     if session_id is not None:
-        session = db.get(ChatSession, session_id)
-        if session is None:
-            raise ChatSessionNotFoundError(f"Chat session {session_id} not found.")
-        return session
+        return _get_owned_session(db, session_id, user)
 
-    user = get_or_create_default_user(db)
     session = ChatSession(user_id=user.id, document_id=document_id)
     db.add(session)
     db.commit()

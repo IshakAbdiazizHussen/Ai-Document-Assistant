@@ -20,6 +20,7 @@ from app.main import app
 from app.models import ChatMessage, ChatSession, Chunk, Document
 from app.services import chat_service, document_service
 from app.utils import file_validation
+from tests.conftest import register_test_user
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -97,6 +98,7 @@ def mock_chat_client(monkeypatch):
 @pytest.fixture
 def client():
     with TestClient(app) as c:
+        register_test_user(c)
         yield c
 
 

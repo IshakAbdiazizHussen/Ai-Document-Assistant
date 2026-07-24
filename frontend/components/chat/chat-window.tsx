@@ -10,22 +10,48 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/api/client";
 import { useChatMessages, useSendMessage } from "@/hooks/use-chat";
+import type { ChatSource } from "@/lib/types/chat";
 
 function sessionStorageKey(documentId: string) {
   return `ai-doc-assistant:chat-session:${documentId}`;
 }
 
-export function ChatWindow({ documentId }: { documentId?: string }) {
-  const [sessionId, setSessionId] = useState<string | undefined>(undefined);
+export function ChatWindow({
+  documentId,
+  documentFilename,
+  initialSessionId,
+  onCiteClick,
+  onSessionChange,
+}: {
+  documentId?: string;
+  documentFilename?: string;
+  /** Explicit session to open (e.g. deep-linked from the Conversations list).
+   * Pass an empty string to force starting a brand-new conversation instead
+   * of resuming whatever this document's last session was. */
+  initialSessionId?: string;
+  onCiteClick?: (source: ChatSource) => void;
+  onSessionChange?: (sessionId: string | undefined) => void;
+}) {
+  const [sessionId, setSessionIdState] = useState<string | undefined>(undefined);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  function setSessionId(next: string | undefined) {
+    setSessionIdState(next);
+    onSessionChange?.(next);
+  }
 
   useEffect(() => {
     if (!documentId) {
       setSessionId(undefined);
       return;
     }
+    if (initialSessionId !== undefined) {
+      setSessionId(initialSessionId || undefined);
+      return;
+    }
     setSessionId(window.localStorage.getItem(sessionStorageKey(documentId)) ?? undefined);
-  }, [documentId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentId, initialSessionId]);
 
   const hasSession = Boolean(sessionId);
   const { data: messages, isPending, isError, refetch } = useChatMessages(sessionId);
@@ -87,7 +113,14 @@ export function ChatWindow({ documentId }: { documentId?: string }) {
               }
             />
           ) : messageList.length > 0 ? (
-            messageList.map((message) => <MessageBubble key={message.id} message={message} />)
+            messageList.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                documentFilename={documentFilename}
+                onCiteClick={onCiteClick}
+              />
+            ))
           ) : (
             <EmptyState
               icon={MessageSquare}

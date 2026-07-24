@@ -18,7 +18,7 @@ Status: Binding rules for this project. Any deviation must be explicitly approve
 
 - Use only the selected technology stack: Next.js 15, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query (frontend); Python, FastAPI, PostgreSQL, SQLAlchemy (backend); OpenAI API, OpenAI Embeddings, ChromaDB (AI layer).
 - Maintain clean separation of responsibilities: API routes handle HTTP concerns only; business logic lives in the service layer; data access lives in the model/repository layer; AI calls are isolated in dedicated modules.
-- Keep the MVP simple. Do not add multi-tenant, billing, real-time collaboration, or advanced auth systems unless they are explicitly scoped in.
+- Keep the MVP simple. Do not add billing or real-time collaboration unless explicitly scoped in. Password-based auth (register/login/logout/forgot-password) and per-user document/chat isolation were explicitly scoped in and are implemented (see `app/api/routes/auth.py`); true multi-tenancy beyond per-user ownership (teams, roles, shared workspaces) is still out of scope.
 - Avoid over-engineering — do not introduce abstractions, design patterns, or infrastructure (e.g., message queues, microservices) that the current scope does not require.
 - The relational database (PostgreSQL) is the source of truth for metadata; the vector database (ChromaDB) is a derived index that supports semantic search, not a source of truth for document content.
 

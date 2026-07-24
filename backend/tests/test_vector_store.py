@@ -7,9 +7,10 @@ import pytest
 from app.ai import vector_store
 from app.ai.vector_store import ChunkRecord, VectorStoreError, add_chunks, delete_document, query
 from app.db.session import SessionLocal
-from app.models import Chunk, Document, DocumentStatus, User
+from app.models import Chunk, Document, DocumentStatus
 from app.services import document_service
-from app.services.document_service import DEFAULT_USER_EMAIL, process_document
+from app.services.document_service import process_document
+from tests.conftest import make_user
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -146,12 +147,7 @@ def test_process_document_end_to_end_populates_vector_id_and_is_searchable(
     monkeypatch.setattr(document_service, "embed_texts", lambda texts: [[1.0, 0.0, 0.0] for _ in texts])
 
     with SessionLocal() as db:
-        user = db.query(User).filter(User.email == DEFAULT_USER_EMAIL).first()
-        if user is None:
-            user = User(email=DEFAULT_USER_EMAIL)
-            db.add(user)
-            db.commit()
-            db.refresh(user)
+        user = make_user(db)
 
         dest = tmp_path / "sample.txt"
         shutil.copy(FIXTURES_DIR / "sample.txt", dest)

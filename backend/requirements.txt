@@ -10,5 +10,8 @@ pypdf
 python-docx
 tiktoken
 python-multipart
+bcrypt
+PyJWT
+email-validator
 pytest
 httpx

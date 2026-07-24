@@ -13,6 +13,7 @@ class SourceReference(BaseModel):
     chunk_id: str
     document_id: str
     excerpt: str
+    page_number: int | None = None
 
 
 class ChatRequest(BaseModel):
@@ -43,3 +44,22 @@ class ChatMessageOut(BaseModel):
     content: str
     source_chunk_ids: list[str] | None
     created_at: datetime
+
+
+class ChatSessionSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    title: str | None
+    document_id: uuid.UUID | None
+    document_filename: str | None
+    message_count: int
+    last_message_preview: str | None
+    pinned: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChatSessionUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=1, max_length=200)
+    pinned: bool | None = None

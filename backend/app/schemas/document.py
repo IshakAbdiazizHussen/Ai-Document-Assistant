@@ -13,6 +13,7 @@ class DocumentBase(BaseModel):
     filename: str
     file_type: str
     file_size_bytes: int
+    page_count: int | None
     status: DocumentStatus
     error_message: str | None
     created_at: datetime
@@ -34,3 +35,11 @@ class DocumentCreateResponse(BaseModel):
     filename: str
     status: DocumentStatus
     created_at: datetime
+
+
+class DocumentPageOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    page_number: int
+    total_pages: int
+    text: str

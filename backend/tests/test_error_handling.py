@@ -12,18 +12,20 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.services import document_service
+from tests.conftest import register_test_user
 
 
 @pytest.fixture
 def client():
     with TestClient(app, raise_server_exceptions=False) as c:
+        register_test_user(c)
         yield c
 
 
 def test_unhandled_exception_returns_sanitized_500(client, monkeypatch, caplog):
     sensitive_detail = "unexpected failure touching /etc/passwd with secret=abc123"
 
-    def boom(db):
+    def boom(db, user):
         raise RuntimeError(sensitive_detail)
 
     monkeypatch.setattr(document_service, "list_documents", boom)
@@ -42,7 +44,7 @@ def test_unhandled_exception_returns_sanitized_500(client, monkeypatch, caplog):
 
 
 def test_app_keeps_running_after_an_unhandled_exception(client, monkeypatch):
-    def boom(db):
+    def boom(db, user):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(document_service, "list_documents", boom)

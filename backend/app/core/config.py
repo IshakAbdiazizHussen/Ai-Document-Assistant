@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     database_url: str
     openai_api_key: str
 
+    # No default either: a hardcoded fallback secret would silently sign
+    # real login sessions with a key every clone of this repo shares.
+    secret_key: str
+    access_token_expire_minutes: int = 60 * 24 * 7  # 7 days
+    reset_token_expire_minutes: int = 30
+
     openai_chat_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 

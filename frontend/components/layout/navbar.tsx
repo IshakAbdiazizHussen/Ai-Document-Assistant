@@ -1,32 +1,57 @@
-import { FileText } from "lucide-react";
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { useState } from "react";
+
+import { AuthDialog, type AuthView } from "@/components/auth/auth-dialog";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { marketingNavLinks } from "@/lib/marketing-nav";
 
 export function Navbar() {
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authView, setAuthView] = useState<AuthView>("login");
+
+  function openAuth(view: AuthView) {
+    setAuthView(view);
+    setAuthOpen(true);
+  }
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold">
-          <FileText className="size-5 text-primary" />
-          <span>AI Document Assistant</span>
+    <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white dark:border-white/10 dark:bg-zinc-950">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 sm:px-8">
+        <Link href="/" className="flex items-center gap-2.5">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-violet-600 text-sm font-bold text-white">
+            A
+          </span>
+          <span className="text-lg font-bold text-zinc-900 dark:text-white">AI Document Assistant</span>
         </Link>
-        <nav className="flex items-center gap-1">
-          <Link
-            href="/dashboard"
-            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Dashboard
-          </Link>
-          <Link
-            href="/settings"
-            className="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Settings
-          </Link>
-          <ThemeToggle />
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {marketingNavLinks.map(({ label, href }) => (
+            <a
+              key={label}
+              href={href}
+              className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"
+            >
+              {label}
+            </a>
+          ))}
         </nav>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={() => openAuth("login")}
+            className="h-10 rounded-lg border border-zinc-300 bg-transparent px-5 text-sm font-bold text-zinc-900 hover:bg-zinc-100 dark:border-white/30 dark:text-white dark:hover:bg-white/10"
+          >
+            Log in
+          </Button>
+          <ThemeToggle />
+        </div>
       </div>
+
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} defaultView={authView} />
     </header>
   );
 }

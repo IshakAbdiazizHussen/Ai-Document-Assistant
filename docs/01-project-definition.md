@@ -64,7 +64,6 @@ Users can view a list of their uploaded documents, check processing status, and 
 - Multi-document cross-referencing in a single answer
 - Document summarization on demand
 - Support for additional file types (scanned images via OCR, spreadsheets, presentations)
-- User accounts with authentication and per-user document isolation
 - Team/workspace sharing of document collections
 - Streaming responses (token-by-token) in the chat interface
 - Usage analytics and cost tracking for AI calls
