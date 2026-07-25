@@ -1,9 +1,12 @@
+import logging
 from functools import lru_cache
 
 from openai import OpenAI, OpenAIError
 
-from app.ai.error_utils import describe_openai_error
+from app.ai.error_utils import describe_openai_error, log_openai_error
 from app.core.config import get_settings
+
+logger = logging.getLogger(__name__)
 
 # Kept well under OpenAI's per-request input-item limit for the embeddings
 # endpoint; large documents are split across multiple batched calls rather
@@ -45,11 +48,25 @@ def _embed_batch(batch: list[str], model: str) -> list[list[float]]:
         client = _get_client()
         response = client.embeddings.create(model=model, input=batch)
     except OpenAIError as exc:
-        # `from None` deliberately drops the exception chain: the SDK's own
-        # error message can echo back a masked fragment of the API key that
-        # was used, so it must never propagate into logs or responses.
+        # Full structured detail goes to the server log only (see
+        # log_openai_error); the exception raised here — which can end up
+        # in a response — stays sanitized via describe_openai_error, same
+        # as before.
+        empty_count = sum(1 for t in batch if not t.strip())
+        total_tokens = sum(len(t) for t in batch)  # cheap proxy, not tiktoken-exact
+        log_openai_error(
+            logger,
+            exc,
+            context=(
+                f"Embeddings request failed (model={model!r}, batch_size={len(batch)}, "
+                f"empty_or_blank_items={empty_count}, total_chars={total_tokens})"
+            ),
+        )
         raise EmbeddingError(f"Embedding request failed: {describe_openai_error(exc)}") from None
     except Exception as exc:
+        log_openai_error(
+            logger, exc, context=f"Embeddings request failed unexpectedly (model={model!r})"
+        )
         raise EmbeddingError(
             f"Embedding request failed unexpectedly: {describe_openai_error(exc)}"
         ) from None
