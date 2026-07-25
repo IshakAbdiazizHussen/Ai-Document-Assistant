@@ -1,0 +1,18 @@
+node_modules
+.next
+.git
+.gitignore
+
+# env files — these must never be baked into the image; Railway injects
+# real values as container environment variables instead
+.env*
+!.env*.example
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.DS_Store
+*.tsbuildinfo
+README.md
