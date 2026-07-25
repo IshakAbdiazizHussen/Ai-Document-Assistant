@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, File, LogOut, MessageSquare, Settings, User } from "lucide-react";
+import { ChevronDown, File, LogOut, MessageSquare, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -40,12 +40,6 @@ const navItems = [
     label: "Conversations",
     icon: MessageSquare,
     isActive: (pathname: string) => pathname.startsWith("/dashboard/conversations"),
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Settings",
-    icon: Settings,
-    isActive: (pathname: string) => pathname.startsWith("/dashboard/settings"),
   },
 ];
 
@@ -103,9 +97,6 @@ function AccountMenu() {
           }}
         >
           Copy email
-        </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/dashboard/settings" />}>
-          Account settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -208,12 +199,6 @@ const mobileTabs = [
     label: "Chats",
     icon: MessageSquare,
     isActive: (pathname: string) => pathname.startsWith("/dashboard/conversations"),
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Profile",
-    icon: User,
-    isActive: (pathname: string) => pathname.startsWith("/dashboard/settings"),
   },
 ];
 
