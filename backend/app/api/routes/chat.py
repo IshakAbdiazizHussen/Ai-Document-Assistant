@@ -55,6 +55,7 @@ def send_message(
     # Only counts against the daily quota once the AI actually answered —
     # none of the exception branches above reach this line.
     usage_service.increment_questions_asked(db, current_user)
+    usage_service.increment_global_questions_asked(db)
     return result
 
 

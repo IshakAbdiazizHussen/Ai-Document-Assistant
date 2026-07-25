@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     max_docs_per_day: int = 2
     max_questions_per_day: int = 5
 
+    # Site-wide daily quotas, summed across every user — protects the
+    # shared OpenAI budget even when each individual user stays under
+    # their own per-user limit above.
+    max_global_docs_per_day: int = 50
+    max_global_questions_per_day: int = 100
+
     # Comma-separated list of origins allowed to call this API from a
     # browser (frontend/.env.local's NEXT_PUBLIC_API_URL points here, but
     # CORS is governed by the frontend's own origin, not that URL).

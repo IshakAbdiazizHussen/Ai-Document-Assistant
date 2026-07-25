@@ -32,9 +32,12 @@ def enforce_upload_limit(
     db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ) -> User:
     """Runs before the upload endpoint's body — blocks the request (and the
-    OpenAI call that would follow it) before any file is even read, if the
-    user has hit today's document quota."""
+    OpenAI call that would follow it) before any file is even read, if
+    either the site-wide or this user's own document quota is already hit
+    today. The global check runs first, so a site-capacity block is never
+    masked by a coincidentally-also-true personal-limit message."""
     try:
+        usage_service.check_global_upload_limit(db)
         usage_service.check_upload_limit(db, current_user)
     except UsageLimitExceededError as exc:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
@@ -46,6 +49,7 @@ def enforce_question_limit(
 ) -> User:
     """Same as enforce_upload_limit, for the ask-question endpoint."""
     try:
+        usage_service.check_global_question_limit(db)
         usage_service.check_question_limit(db, current_user)
     except UsageLimitExceededError as exc:
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc

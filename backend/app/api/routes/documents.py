@@ -38,6 +38,7 @@ async def upload_document(
     # Only counts against the daily quota once the upload itself actually
     # succeeded — a rejected file type/size never reaches this line.
     usage_service.increment_documents_uploaded(db, current_user)
+    usage_service.increment_global_documents_uploaded(db)
 
     # Snapshot the response while status is still "processing" (Feature 2's
     # contract), then run the pipeline. process_document() never raises —
