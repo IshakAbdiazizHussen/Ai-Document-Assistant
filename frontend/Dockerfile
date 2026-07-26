@@ -17,6 +17,13 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
+# next.config.ts's rewrites() also runs during `next build` (it's baked
+# into the build's routes manifest, same as NEXT_PUBLIC_* values above) —
+# so this needs to be a build ARG too, not just a runtime env var. Unlike
+# NEXT_PUBLIC_API_URL, this one is never exposed to the browser.
+ARG BACKEND_API_URL
+ENV BACKEND_API_URL=$BACKEND_API_URL
+
 RUN npm run build
 
 EXPOSE 3000
